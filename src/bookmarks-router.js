@@ -15,18 +15,18 @@ bookmarksRouter
   .post(bodyParser, (req, res) => {
     const { title, url, desc, rating } = req.body
 
-    if(!title) {
+    if (!title) {
       logger.error(`Title is required.`)
       return res
-      .status(400)
-      .send('Invalid data')
+        .status(400)
+        .send('Invalid data')
     }
 
-    if(!url){
+    if (!url) {
       logger.error(`URL is required.`)
       return res
-      .status(400)
-      .send('Invalid data')
+        .status(400)
+        .send('Invalid data')
     }
 
     const id = uuid()
@@ -44,16 +44,26 @@ bookmarksRouter
     logger.info(`Bookmark with id ${id}created`)
 
     res
-    .status(201)
-    .location(`http://localhost:8000/${id}`)
-    .json(bookmark)
+      .status(201)
+      .location(`http://localhost:8000/${id}`)
+      .json(bookmark)
 
   })
 
 bookmarksRouter
   .route('/bookmarks/:id')
   .get((req, res) => {
+    const { id } = req.params
+    const bookmark = bookmarks.find(b => b.id === id)
 
+    if (!bookmark) {
+      logger.error(`Bookmark with id ${id} not found.`)
+      return res
+        .status(404)
+        .send('Bookmark Not Found')
+    }
+
+    res.json(bookmark)
   })
   .delete((req, res) => {
 

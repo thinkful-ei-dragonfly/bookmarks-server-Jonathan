@@ -1,5 +1,5 @@
 const bookmarks = [{
-  id: 1,
+  id: '1',
   title: 'Facebook.com',
   url: 'http://www.facebook.com',
   desc: 'Facebook home page',
