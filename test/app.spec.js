@@ -60,7 +60,7 @@ describe('Bookmarks Endpoints', () => {
         .expect(200, secondBookmark)
     })
 
-    it(`returns 404 whe bookmark doesn't exist`, () => {
+    it(`returns 404 when bookmark doesn't exist`, () => {
       return supertest(app)
         .get(`/bookmarks/doesnt-exist`)
         .set('Authorization', `Bearer ${process.env.API_TOKEN}`)
@@ -126,7 +126,7 @@ describe('Bookmarks Endpoints', () => {
         .post(`/bookmarks`)
         .send(newBookmarkMissingRating)
         .set('Authorization', `Bearer ${process.env.API_TOKEN}`)
-        .expect(400, `'rating' is required`)
+        .expect(400, `Invalid data`)
     })
 
     it(`responds with 400 invalid 'rating' if not between 0 and 5`, () => {
@@ -139,7 +139,7 @@ describe('Bookmarks Endpoints', () => {
         .post(`/bookmarks`)
         .send(newBookmarkInvalidRating)
         .set('Authorization', `Bearer ${process.env.API_TOKEN}`)
-        .expect(400, `'rating' must be a number between 0 and 5`)
+        .expect(400, `Invalid data`)
     })
 
     it(`responds with 400 invalid 'url' if not a valid URL`, () => {
@@ -152,14 +152,14 @@ describe('Bookmarks Endpoints', () => {
         .post(`/bookmarks`)
         .send(newBookmarkInvalidUrl)
         .set('Authorization', `Bearer ${process.env.API_TOKEN}`)
-        .expect(400, `'url' must be a valid URL`)
+        .expect(400, `Invalid data`)
     })
 
     it('adds a new bookmark to the store', () => {
       const newBookmark = {
         title: 'test-title',
         url: 'https://test.com',
-        description: 'test description',
+        desc: 'test description',
         rating: 1,
       }
       return supertest(app)
@@ -170,10 +170,11 @@ describe('Bookmarks Endpoints', () => {
         .expect(res => {
           expect(res.body.title).to.eql(newBookmark.title)
           expect(res.body.url).to.eql(newBookmark.url)
-          expect(res.body.description).to.eql(newBookmark.description)
+          expect(res.body.desc).to.eql(newBookmark.desc)
           expect(res.body.rating).to.eql(newBookmark.rating)
           expect(res.body.id).to.be.a('string')
         })
+        .then(console.log(store.bookmarks))
         .then(res => {
           expect(store.bookmarks[store.bookmarks.length - 1]).to.eql(res.body)
         })

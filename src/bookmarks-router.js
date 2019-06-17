@@ -3,6 +3,7 @@ const bodyParser = express.json()
 const { bookmarks } = require('./store')
 const uuid = require('uuid/v4')
 const logger = require('./logger')
+const { isWebUri } = require('valid-url')
 
 const bookmarksRouter = express.Router()
 
@@ -14,6 +15,20 @@ bookmarksRouter
   })
   .post(bodyParser, (req, res) => {
     const { title, url, desc, rating } = req.body
+
+    if(!Number.isInteger(rating) || rating < 0 || rating > 5) {
+      logger.error(`Invalid rating '${rating}' supplied`)
+      return res
+      .status(400)
+      .send(`Invalid data`)
+    }
+
+    if(!isWebUri(url)) {
+      logger.error(`Invalid url '${url}' supplied`)
+      return res
+      .status(400)
+      .send(`Invalid data`)
+    }
 
     if (!title) {
       logger.error(`Title is required.`)
@@ -27,6 +42,20 @@ bookmarksRouter
       return res
         .status(400)
         .send('Invalid data')
+    }
+
+    if(!desc) {
+      logger.error(`Description is required.`)
+      return res
+      .status(400)
+      .send('Invalid data')
+    }
+
+    if(!rating){
+      logger.error(`Rating is required.`)
+      return res
+      .status(400)
+      .send('Invalid data')
     }
 
     const id = uuid()
@@ -76,7 +105,9 @@ bookmarksRouter
       .send('Bookmark Not Found')
     }
 
-    bookmarks.splice(bookmark, 1)
+    const index = bookmarks.indexOf(bookmark)
+  
+    bookmarks.splice(index, 1)
 
     logger.info(`Bookmark with id ${id} deleted`)
 
