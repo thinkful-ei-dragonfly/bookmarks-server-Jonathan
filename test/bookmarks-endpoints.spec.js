@@ -23,7 +23,7 @@ describe('Bookmarks Endpoints', () => {
   afterEach('cleanup', () => db('bookmarks').truncate())
  
 
-  describe.only(`GET /bookmarks`, () => {
+  describe(`GET /bookmarks`, () => {
 
     context(`Given no bookmarks`, () => {
       
@@ -52,6 +52,8 @@ describe('Bookmarks Endpoints', () => {
     })
   })
 
+  
+  
   describe(`GET /bookmarks/:bookmark_id`, () => {
 
     context(`Given no bookmarks`, () => {
@@ -61,6 +63,36 @@ describe('Bookmarks Endpoints', () => {
         .get(`/bookmarks/${bookmarkId}`)
         .expect(404, { error: { message: `Bookmark doesn't exist` }})
       })
+    })
+  })
+
+
+
+  describe.only(`POST /bookmarks`, () => {
+    console.log('API_TOKEN',process.env.API_TOKEN)
+    it(`creates a bookmark, responding with 201 and the new bookmark`, function() {
+      const newBookmark = {
+        title: 'Test new Bookmark',
+        uri: 'http://www.test-bookmark.com',
+        descript: 'A test bookmark',
+        rating: 5,
+      }
+      return supertest(app)
+      .post('/bookmarks')
+      .send(newBookmark)
+      .set('Authorization', `Bearer ${process.env.API_TOKEN}`)
+      .expect(201)
+      .expect(res => {
+        expect(res.body.title).to.eql(newBookmark.title)
+        expect(res.body.uri).to.eql(newBookmark.uri)
+        expect(res.body.descript).to.eql(newBookmark.descript)
+        expect(res.body.rating).to.eql(newBookmark.rating.toString())
+      })
+      .then(postRes => 
+        supertest(app)
+        .get(`/bookmarks/${postRes.body.id}`)
+        .expect(postRes.body)
+        )
     })
   })
 })

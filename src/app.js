@@ -4,7 +4,7 @@ const morgan = require('morgan')
 const cors = require('cors')
 const helmet = require('helmet')
 const { NODE_ENV } = require('./config')
-const bookmarksRouter = require('./bookmarks-router')
+const bookmarksRouter = require('./bookmarks/bookmarks-router')
 
 const app = express()
 
@@ -18,6 +18,7 @@ app.use(helmet())
 
 app.use(function validateBearerToken(req, res, next) {
   const apiToken = process.env.API_TOKEN
+  console.log(apiToken)
   const authToken = req.get('Authorization')
 
   if (!authToken || authToken.split(' ')[1] !== apiToken) {

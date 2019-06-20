@@ -1,13 +1,13 @@
 require('dotenv').config()
 const express = require('express')
-const bodyParser = express.json()
-const { bookmarks } = require('./store')
+const { bookmarks } = require('../store')
 const uuid = require('uuid/v4')
-const logger = require('./logger')
+const logger = require('../logger')
 const { isWebUri } = require('valid-url')
 const BookmarksService = require('./bookmarks-service')
 
 const bookmarksRouter = express.Router()
+const jsonParser = express.json()
 
 bookmarksRouter
   .route('/bookmarks')
@@ -20,8 +20,18 @@ bookmarksRouter
       })
       .catch(next)
   })
-  .post(bodyParser, (req, res) => {
-    const { title, url, desc, rating } = req.body
+  .post(jsonParser, (req, res, next) => {
+    const knexInstance = req.app.get('db')
+    const { title, uri, descript, rating } = req.body
+    const newBookmark = { title, uri, descript, rating }
+
+    for (const [key, value] of Object.entries(newBookmark)) {
+      if (value == null) {
+        return res.status(400).json({
+          error: { message: `Missing '${key}' in request body` }
+        })
+      }
+    }
 
     if (!Number.isInteger(rating) || rating < 0 || rating > 5) {
       logger.error(`Invalid rating '${rating}' supplied`)
@@ -30,8 +40,8 @@ bookmarksRouter
         .send(`Invalid data`)
     }
 
-    if (!isWebUri(url)) {
-      logger.error(`Invalid url '${url}' supplied`)
+    if (!isWebUri(uri)) {
+      logger.error(`Invalid url '${uri}' supplied`)
       return res
         .status(400)
         .send(`Invalid data`)
@@ -44,14 +54,14 @@ bookmarksRouter
         .send('Invalid data')
     }
 
-    if (!url) {
+    if (!uri) {
       logger.error(`URL is required.`)
       return res
         .status(400)
         .send('Invalid data')
     }
 
-    if (!desc) {
+    if (!descript) {
       logger.error(`Description is required.`)
       return res
         .status(400)
@@ -65,24 +75,17 @@ bookmarksRouter
         .send('Invalid data')
     }
 
-    const id = uuid()
-
-    const bookmark = {
-      id,
-      title,
-      url,
-      desc,
-      rating
-    }
-
-    bookmarks.push(bookmark)
-
-    logger.info(`Bookmark with id ${id}created`)
-
-    res
-      .status(201)
-      .location(`http://localhost:8000/${id}`)
-      .json(bookmark)
+    BookmarksService.addBookmark(
+      knexInstance,
+      newBookmark
+    )
+      .then(bookmark => {
+        res
+          .status(201)
+          .location(`/bookmarks/${bookmark.id}`)
+          .json(bookmark)
+      })
+      .catch(next)
 
   })
 
@@ -101,7 +104,7 @@ bookmarksRouter
         res.json(bookmark)
       })
       .catch(next)
-    })
+  })
   .delete((req, res) => {
     const { id } = req.params
     const bookmark = bookmarks.find(b => b.id === id)
