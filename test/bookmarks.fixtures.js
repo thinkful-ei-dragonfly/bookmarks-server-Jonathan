@@ -1,4 +1,4 @@
-function makeBookmarksArray (){
+function makeBookmarksArray() {
   return [{
     id: 1,
     title: 'Facebook.com',
@@ -15,4 +15,27 @@ function makeBookmarksArray (){
   }]
 }
 
-module.exports = { makeBookmarksArray }
+function makeMaliciousBookmark() {
+  const maliciousBookmark = {
+    id: 911,
+    title: 'Malicious Bookmark',
+    uri: 'http://malicious-bookmark.com',
+    descript: '<img src="https://a.page.to.nowhere.com" onerror="alert("gotcha");">',
+    rating: 0
+  }
+
+  const expectedBookmark = {
+    ...maliciousBookmark,
+    descript: '<img src="https://a.page.to.nowhere.com">'
+  }
+
+  return {
+    maliciousBookmark,
+    expectedBookmark,
+  }
+}
+
+module.exports = {
+  makeBookmarksArray,
+  makeMaliciousBookmark
+}
